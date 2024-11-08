@@ -1,0 +1,86 @@
+{
+    "example": {
+      "initial_state": {},
+      "task": {
+        "name": "I want to set a default time frame for the warranty data on Mac Laptops",
+        "description": "Set the default time frame for the warranty data on Mac Laptops",
+        "tools": [
+            
+        ]
+      }
+    },
+    "plan": [
+        {
+           "id" : "0",
+           "reasoning" : "The user has mentioned a device in its input, this needs to be put into the memory for later use.",
+           "description" :  "Extract the device information from the user input",
+           "start_state" : { 
+            "agent_memory" : {}, 
+            "state" : {}
+            },
+           "code" : {
+               "tool" : "memory_update",
+               "key" : "device",
+               "value" : "Mac Laptops"
+           },
+           "type" : "executable",
+           "end_state" : { 
+            "agent_memory" : { 
+                "device"  : "Mac Laptops" 
+                } , 
+                "state" : {
+                }} 
+        },
+        {
+            "id" : "1",
+            "description" : "Gather a description of the rule for setting the default time frame.",
+            "type" : "executable",
+            "start_state" : { 
+                "agent_memory" : { 
+                    "device"  : "Mac Laptops" 
+                    } , 
+                    "state" : {
+                    }} ,
+
+            "code" : {
+                "type" : "dsl",
+                "code" : "gather_input(\"Describe a rule for setting the default time frame on Mac Laptops\", \"rule_description\")",
+                "save_output": "True",
+                "output": "User Input: rule_description If asset was recieved after January of last year then set the time frame to X otherwise set the time frame to Y"
+            
+            },
+            "end_state" : { 
+                "agent_memory" : { 
+                    "device"  : "Mac Laptops", 
+                    "rule_description" : "If asset was recieved after January of last year then set the time frame to X otherwise set the time frame to Y"
+                    } , 
+                    "state" : {
+                    }
+            }  
+        },
+        {
+             "id" : "2",
+             "description" : "Update the default time frame based on the given model and rule description.",
+             "code" : {},
+             "start_state" : { 
+                "agent_memory" : { 
+                    "device"  : "Mac Laptops", 
+                    "rule_description" : "If asset was recieved after January of last year then set the time frame to X otherwise set the time frame to Y"
+                    } , 
+                    "state" : {
+                        
+                    }
+            },
+            "end_state" : {
+                "agent_memory" : { 
+                    "device"  : "Mac Laptops", 
+                    "rule_description" : "If asset was recieved after January of last year then set the time frame to X otherwise set the time frame to Y"
+
+                    } , 
+                    "state" : {
+                    }
+            }
+             
+        }
+    ]
+}
