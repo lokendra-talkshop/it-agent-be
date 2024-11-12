@@ -1,0 +1,456 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+
+
+
+model Agent {
+   id String @id @default(uuid())
+   role String @db.VarChar(20)
+
+   service String? @db.VarChar(20)
+
+   tasks AgentTaskExecution[]
+
+   botId String @map("bot_id")
+   bot Bot @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+   createdAt DateTime @default(now()) @map("created_at")
+   updatedAt DateTime @updatedAt @map("updated_at")
+  
+   @@index([botId])
+   @@index([service])
+   @@map("agents")
+
+}
+
+
+model AgentTaskNode {
+     id String @id @default(uuid())
+     
+     parentId String @map("parent_id") 
+     parent AgentTaskExecution @relation(fields: [parentId], references: [id], onDelete: Cascade , name : "child_tasks")
+
+     childId String @unique() @map("child_id")
+     child AgentTaskExecution @relation(fields: [childId], references: [id], onDelete: Cascade , name : "parent_task")
+     
+     createdAt DateTime @default(now()) @map("created_at")
+     updatedAt DateTime @updatedAt @map("updated_at")
+
+     @@index([parentId])
+     @@index([childId])
+     @@map("agent_task_nodes")
+
+}
+
+
+model AgentTaskExecution {
+   id String @id @default(uuid())
+   
+   plan Plan?
+
+   agentId String @map("agent_id")
+   agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade) 
+
+   parentNode AgentTaskNode? @relation("parent_task") 
+   children AgentTaskNode[] @relation("child_tasks")
+
+   systemStepType String @default("system1") @map("system_step_type") @db.VarChar(8)
+
+   taskType String @default("") @map("task_type")
+
+   taskContent String  @default("") @map("task_content")
+
+   depth Int @default(0)
+
+   planState String @default("") @map("plan_state")
+
+   isExecuted Boolean @default(false) @map("is_executed")
+
+   taskQueue TaskQueue[]
+
+   createdAt DateTime @default(now()) @map("created_at")
+   updatedAt DateTime @updatedAt @map("updated_at")
+
+   @@map("agent_tasks")
+
+}
+
+model AgentMemory {
+    
+    id String @id @default(uuid())
+    
+    planId String @map("plan_id")
+    plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade) 
+
+    key String  @db.VarChar(50)
+
+    value String
+
+    @@index([planId, key])
+    @@index([planId])
+    @@map("agent_memory")
+
+}
+
+model Plan {
+   id String @id @default(uuid())
+   
+   conversationId String @map("conversation_id")
+   conversation Conversation @relation(fields: [conversationId] , references: [id] , onDelete: Cascade)
+
+   rootId String? @map("root_id") @unique
+   root AgentTaskExecution? @relation(fields: [rootId], references: [id] ) 
+  
+   memory AgentMemory[]
+  
+   @@index([conversationId])
+   @@map("plan")
+
+}
+
+
+model Bot {
+   id   String  @id @default(uuid())
+   name String @db.VarChar(20)
+   image String? @db.VarChar(500)
+   description String? @db.VarChar(800)   
+   coverImage String? @db.VarChar(500) @map("cover_image")
+   
+   configLocation String @map("config_location") @db.VarChar(500) @default("")
+   
+   isActive Boolean @default(false) @map("is_active")
+
+   conversations Conversation[]
+   
+   likes Likes[]
+   dislikes DisLikes[]
+   samplePrompts SamplePrompts[]
+
+   agents Agent[]
+
+   createdAt DateTime @default(now()) @map("created_at")
+   updatedAt DateTime @updatedAt @map("updated_at")
+
+   @@map("bots")
+}
+
+model SamplePrompts {
+   id String @id @default(uuid())
+   
+   botId String @map("bot_id")
+   bot Bot @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+   text String @db.VarChar(500)
+
+   createdAt DateTime @default(now()) @map("created_at")
+   updatedAt DateTime @updatedAt @map("updated_at")
+
+   @@index([botId])
+   @@map("sample_prompts")
+
+}
+
+
+model Users {
+  id            String   @id @default(uuid())
+  email         String?  @unique @db.VarChar(255)
+  name          String?  @db.VarChar(255)
+  createdAt     DateTime @default(now()) @map("created_at")
+  profilePicUrl String?  @map("profile_pic_url") @db.VarChar(500)
+  isOfLegalAge Boolean?  @map("is_of_legal_age")
+
+  userOnboarding   UsersOnboarding?
+  userToken        UserTokens?
+  userNotification UserNotifications[]
+  bannedUser BannedUsers? 
+
+  conversations Conversation[]
+  messages Message[]
+  reports Report[]
+  likes Likes[]
+  dislikes DisLikes[]
+  
+  savedMessages ClipBoard[]
+
+  @@index([email], name: "email_index")
+  @@index([name])
+  @@map("users")
+}
+
+model UserTokens {
+  id String @id @default(uuid())
+
+  userId String @unique @map("user_id") @db.VarChar(255)
+  user   Users  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fcmToken String? @map("fcm_token") @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("user_tokens")
+}
+
+model UserNotifications {
+  id String @id @default(uuid())
+
+  userId String @map("user_id")
+  user   Users  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  isRead Boolean   @default(false) @map("is_read")
+  readAt DateTime? @map("read_at")
+
+  title String? @db.VarChar(255)
+  body  String  @db.VarChar(255)
+
+  primaryThumbnailUrl   String? @map("primary_thumbnail_url") @db.VarChar(500)
+  secondaryThumbnailUrl String? @map("secondary_thumbnail_url") @db.VarChar(500)
+
+  isActionable Boolean @default(false) @map("is_actionable")
+  actionTaken  String? @map("action_taken")
+
+  resourceType String @map("resource_type") @db.VarChar(255)
+  resourceId   String @map("resource_id") @db.VarChar(255)
+
+  secondaryResourceType String? @map("secondary_resource_type") @db.VarChar(255)
+  secondaryResourceId   String? @map("secondary_resource_id") @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([resourceId])
+  @@map("user_notifications")
+}
+
+model UsersOnboarding {
+  id                  String    @id @default(uuid())
+  userId              String    @unique @map("user_id") @db.VarChar(255)
+  user                Users     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users_onboarding")
+}
+
+
+model PresignedURLs {
+  id String @id @default(uuid())
+
+  user         String  @db.VarChar(255)
+  isAdminMedia Boolean @default(false) @map("is_admin_media")
+
+  key String @db.VarChar(255)
+
+  url String @db.VarChar(500)
+
+  bucket String @default("role-play-bot-user-images") @db.VarChar(255)
+
+  contentType String? @map("content_type") @db.VarChar(30)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([user])
+  @@map("presigned_urls")
+}
+
+
+model BannedUsers {
+  id String @id @default(uuid())
+
+  userId String? @map("user_id") @unique()
+  User Users? @relation(fields: [userId], references: [id] , onDelete : Cascade)
+  
+  email String? @unique @db.VarChar(500)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@map("banned_users")
+  
+}
+
+
+// * Admin models Should be in a separate DB more secure.
+model AdminUsers {
+  id String @id @default(uuid())
+
+  email         String? @unique @db.VarChar(255)
+  name          String? @db.VarChar(255)
+  role          String? @default("admin")
+  profilePicUrl String? @map("profile_pic_url") @db.VarChar(500)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@map("admin_users")
+}
+
+model TaskQueue {
+    
+    id String @id @default(uuid())
+
+    conversationId String @map("converation_id")
+    conversation Conversation @relation(fields: [conversationId], references: [id]  )
+   
+    priority Int @default(0)
+
+    taskExecutionId String @map("task_execution_id")
+    taskExecution AgentTaskExecution @relation(fields: [taskExecutionId], references: [id] , onDelete : Cascade )
+   
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+ 
+    @@index([conversationId])
+    
+    @@map("task_queue")
+}
+
+
+model Conversation {
+  id String @id @default(uuid())
+
+  userId String @map("user_id")
+  User Users @relation(fields: [userId], references: [id], onDelete : Cascade )
+  
+  botId String? @map("bot_id")
+  Bot Bot? @relation(fields: [botId], references: [id] , onDelete : SetNull )
+
+  threadId String? @map("thread_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  messages Message[]
+
+  taskqueue TaskQueue[]
+
+  plans Plan[]
+
+  @@index([userId])
+  @@index([botId])
+  @@map("conversations")
+
+}
+
+model Likes { 
+   id String @id @default(uuid())
+
+   userId String @map("user_id")
+   User Users @relation(fields : [userId] , references: [id] , onDelete : Cascade)
+
+   botId String @map("bot_id")
+   Bot Bot @relation(fields: [botId], references: [id] , onDelete : Cascade )
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([botId])
+  @@map("likes")
+   
+}
+
+model DisLikes { 
+   id String @id @default(uuid())
+
+   userId String @map("user_id")
+   User Users @relation(fields : [userId] , references: [id] , onDelete : Cascade)
+
+   botId String @map("bot_id")
+   Bot Bot @relation(fields: [botId], references: [id] , onDelete : Cascade )
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([botId])
+  @@map("dislikes")
+   
+}
+
+
+model Message {
+   id String @id @default(uuid())
+
+   messageType String? @map("message_type")
+
+   senderId String? @map("sender_id")
+   sender Users? @relation(fields : [senderId] , references: [id], onDelete : Cascade)
+
+   conversationId String @map("conversation_id")
+   conversation Conversation @relation(fields : [conversationId] , references: [id], onDelete : Cascade)
+
+   text String  @default("")
+
+   clipBoardEntry ClipBoard?
+
+   reports Report[]
+
+   content String @db.VarChar(500) @default("{}")
+   createdAt DateTime @default(now()) @map("created_at")
+   updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([senderId])
+  @@index([conversationId])
+
+  @@map("messages")
+}
+
+
+model ClipBoard {
+   id String @id @default(uuid())
+   
+   saverId String @map("sender_id")
+   saver Users @relation(fields : [saverId] , references: [id] , onDelete : Cascade)
+
+   messageId String @unique @map("message_id")
+   message Message @relation(fields : [messageId] , references: [id])
+  
+   createdAt DateTime @default(now()) @map("created_at")
+   updatedAt DateTime @updatedAt @map("updated_at")
+
+   @@index([saverId])
+   @@index([messageId])
+
+   @@map("clipboard")
+   
+}
+
+
+model Report {
+
+   id String @id @default(uuid())
+
+   messageId String @map("message_id")
+   message Message @relation(fields : [messageId] , references: [id], onDelete : Cascade)
+
+   reporterId String @map("reporter_id")
+   reporter Users @relation(fields : [reporterId] , references: [id], onDelete : Cascade)
+
+   reason String @db.VarChar(500) @default("")
+
+   createdAt DateTime @default(now()) @map("created_at")
+   updatedAt DateTime @updatedAt @map("updated_at")
+
+   @@index([reporterId])
+
+   @@map("reports")
+   
+}

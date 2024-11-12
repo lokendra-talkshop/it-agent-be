@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "messages" ALTER COLUMN "text" SET DATA TYPE VARCHAR(2000);
