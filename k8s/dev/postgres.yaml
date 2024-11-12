@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secrets
+  namespace: itsm-bot-dev
+data:
+  POSTGRES_USER: dGFsa3Nob3A=
+  POSTGRES_PASSWORD: dGFsa3Nob3AxMjM=
+  POSTGRES_DB: aXRzbWJvdA==
+  POSTGRES_READ_URL: cG9zdGdyZXMtc3ZjLnJvbGUtcGxheS1ib3QtZGV2
+  POSTGRES_WRITE_URL: cG9zdGdyZXMtc3ZjLnJvbGUtcGxheS1ib3QtZGV2
+type: Opaque

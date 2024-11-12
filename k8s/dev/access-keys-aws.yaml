@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: access-keys-aws
+  namespace: itsm-bot-dev
+data:
+  AWS_ACCESS_KEY: QUtJQVI0UEpMU1lTWDVYNUIzUEE=
+  AWS_SECRET_KEY: TzNyN3paQXh5cHVMcmo3WEN3ZHVUbVVIYUZ6MG8yaTFBSUJXZ3hwOQ==
+type: Opaque
