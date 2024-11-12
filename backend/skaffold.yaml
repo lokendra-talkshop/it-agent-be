@@ -16,8 +16,8 @@ deploy:
     releases:
       - name: itsm-bot-backend
         chartPath: ../k8s/itsm-bot-chart  # Path to your Helm chart
+        namespace: itsm-bot-dev
         valuesFiles:
-          - ../k8s/itsm-bot-chart/values-stage.yaml  # Environment-specific values
-        setValues:
-          image.repository: 129875285541.dkr.ecr.us-east-2.amazonaws.com/itsm-bot/backend
-          image.tag: "{{.DIGEST}}"  # Use the digest for image uniqueness
+          - ../k8s/values-stage.yaml  # Environment-specific values
+        setValueTemplates:
+          image.repository: "{{.DIGEST}}"  # Use the digest for image uniqueness
