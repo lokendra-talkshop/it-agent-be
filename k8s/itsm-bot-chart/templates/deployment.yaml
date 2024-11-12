@@ -15,9 +15,14 @@ spec:
     spec:
       initContainers:
         - name: migration
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          image: {{ .Values.image.repository }}
           command: ["npx", "prisma", "migrate", "deploy"]
           env:
+            - name: POSTGRES_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.postgresSecretName }}
+                  key: POSTGRES_URL
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
@@ -40,7 +45,7 @@ spec:
                   key: POSTGRES_WRITE_URL
       containers:
         - name: backend
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          image: {{ .Values.image.repository }}
           livenessProbe:
             httpGet:
               path: /healthy
@@ -113,12 +118,12 @@ spec:
                   key: POSTGRES_DB
             - name: POSTGRES_READ_URL
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   name: {{ .Values.secrets.postgresSecretName }}
                   key: POSTGRES_READ_URL
             - name: POSTGRES_WRITE_URL
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   name: {{ .Values.secrets.postgresSecretName }}
                   key: POSTGRES_WRITE_URL
             - name: CRYPTO_KEY
