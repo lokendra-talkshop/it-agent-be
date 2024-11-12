@@ -1,0 +1,25 @@
+namespace: itsm-bot-dev
+replicas: 1
+image:
+  repository: 129875285541.dkr.ecr.us-east-2.amazonaws.com/itsm-bot/backend
+  tag: 3fce06d-dirty  # Skaffold will replace this tag during build and deploy
+service:
+  type: ClusterIP
+  port: 3000
+environment:
+  setting: development
+  isTokenEncrypted: true
+  env: dev
+  googleClientId: 542284922953-2lq7dh8njuo9c169g0en3p1g4mk8tbv1.apps.googleusercontent.com
+redis:
+  url: redis-svc.role-play-bot-dev
+secrets:
+  awsSecretName: access-keys-aws
+  openAiSecretName: access-keys-svc
+  tokenSecretName: token-secrets
+  postgresSecretName: postgres-secrets
+nodeAffinity:
+  role: non-prod
+  application: role-play-bot
+ingress:
+  enabled: false  # Set to true if you want to use ingress

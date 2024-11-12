@@ -1,0 +1,23 @@
+apiVersion: skaffold/v2beta26
+kind: Config
+build:
+  local:
+    push: true
+  artifacts:
+    - image: 129875285541.dkr.ecr.us-east-2.amazonaws.com/itsm-bot/backend
+      context: .
+      docker:
+        dockerfile: Dockerfile
+      hooks:
+        before:
+          - command: ["sh", "-c", "aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 129875285541.dkr.ecr.us-east-2.amazonaws.com"]
+deploy:
+  helm:
+    releases:
+      - name: itsm-bot-backend
+        chartPath: ../k8s/itsm-bot-chart  # Path to your Helm chart
+        valuesFiles:
+          - ../k8s/itsm-bot-chart/values-stage.yaml  # Environment-specific values
+        setValues:
+          image.repository: 129875285541.dkr.ecr.us-east-2.amazonaws.com/itsm-bot/backend
+          image.tag: "{{.DIGEST}}"  # Use the digest for image uniqueness

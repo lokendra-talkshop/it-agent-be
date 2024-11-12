@@ -1,57 +1,78 @@
+---
+# Source: itsm-bot-chart/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: itsm-bot-dev
+---
+# Source: itsm-bot-chart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: itsm-bot-deployment-config
+  namespace: itsm-bot-dev
+data:
+  GOOGLE_CLIENT_ID: "542284922953-2lq7dh8njuo9c169g0en3p1g4mk8tbv1.apps.googleusercontent.com"
+  REDIS_URL: "redis-svc.role-play-bot-dev"
+  SETTING: "development"
+  IS_TOKEN_ENCRYPTED: "true"
+  ENVIRONMENT: "dev"
+---
+# Source: itsm-bot-chart/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-backend
-  namespace: {{ .Values.namespace }}
+  name: itsm-bot-deployment-backend
+  namespace: itsm-bot-dev
 spec:
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-backend
-  replicas: {{ .Values.replicas }}
+      app: itsm-bot-deployment-backend
+  replicas: 1
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-backend
+        app: itsm-bot-deployment-backend
     spec:
       initContainers:
         - name: migration
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          image: 129875285541.dkr.ecr.us-east-2.amazonaws.com/itsm-bot/backend:3fce06d-dirty
           command: ["npx", "prisma", "migrate", "deploy"]
           env:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.postgresSecretName }}
+                  name: postgres-secrets
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.postgresSecretName }}
+                  name: postgres-secrets
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.postgresSecretName }}
+                  name: postgres-secrets
                   key: POSTGRES_DB
             - name: POSTGRES_URL
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.postgresSecretName }}
+                  name: postgres-secrets
                   key: POSTGRES_WRITE_URL
       containers:
         - name: backend
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          image: 129875285541.dkr.ecr.us-east-2.amazonaws.com/itsm-bot/backend:3fce06d-dirty
           livenessProbe:
             httpGet:
               path: /healthy
-              port: {{ .Values.service.port }}
+              port: 3000
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 2
           readinessProbe:
             httpGet:
               path: /ready
-              port: {{ .Values.service.port }}
+              port: 3000
             initialDelaySeconds: 0
             periodSeconds: 60
             failureThreshold: 2
@@ -59,82 +80,82 @@ spec:
             - name: GOOGLE_CLIENT_ID
               valueFrom: 
                 configMapKeyRef:
-                  name: {{ .Release.Name }}-config
+                  name: itsm-bot-deployment-config
                   key: GOOGLE_CLIENT_ID
             - name: SETTING
               valueFrom: 
                 configMapKeyRef:
-                  name: {{ .Release.Name }}-config
+                  name: itsm-bot-deployment-config
                   key: SETTING
             - name: IS_TOKEN_ENCRYPTED
               valueFrom: 
                 configMapKeyRef:
-                  name: {{ .Release.Name }}-config
+                  name: itsm-bot-deployment-config
                   key: IS_TOKEN_ENCRYPTED
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.awsSecretName }}
+                  name: access-keys-aws
                   key: AWS_ACCESS_KEY
             - name: AWS_ACCESS_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.awsSecretName }}
+                  name: access-keys-aws
                   key: AWS_SECRET_KEY
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.openAiSecretName }}
+                  name: access-keys-svc
                   key: OPENAI_API_KEY
             - name: ENVIRONMENT
               valueFrom:
                 configMapKeyRef:
-                  name: {{ .Release.Name }}-config
+                  name: itsm-bot-deployment-config
                   key: ENVIRONMENT
             - name: REDIS_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ .Release.Name }}-config
+                  name: itsm-bot-deployment-config
                   key: REDIS_URL
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.postgresSecretName }}
+                  name: postgres-secrets
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.postgresSecretName }}
+                  name: postgres-secrets
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.postgresSecretName }}
+                  name: postgres-secrets
                   key: POSTGRES_DB
             - name: POSTGRES_READ_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ .Values.secrets.postgresSecretName }}
+                  name: postgres-secrets
                   key: POSTGRES_READ_URL
             - name: POSTGRES_WRITE_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ .Values.secrets.postgresSecretName }}
+                  name: postgres-secrets
                   key: POSTGRES_WRITE_URL
             - name: CRYPTO_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.tokenSecretName }}
+                  name: token-secrets
                   key: CRYPTO_KEY
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.tokenSecretName }}
+                  name: token-secrets
                   key: JWT_SECRET
             - name: REFRESH_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.tokenSecretName }}
+                  name: token-secrets
                   key: REFRESH_SECRET
       affinity:
         nodeAffinity:
@@ -144,8 +165,29 @@ spec:
                   - key: role
                     operator: In
                     values:
-                      - {{ .Values.nodeAffinity.role }}
+                      - non-prod
                   - key: application
                     operator: In
                     values:
-                      - {{ .Values.nodeAffinity.application }}
+                      - role-play-bot
+---
+# Source: itsm-bot-chart/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "itsm-bot-deployment-itsm-bot-chart-test-connection"
+  labels:
+    helm.sh/chart: itsm-bot-chart-0.1.0
+    app.kubernetes.io/name: itsm-bot-chart
+    app.kubernetes.io/instance: itsm-bot-deployment
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['itsm-bot-deployment-itsm-bot-chart:3000']
+  restartPolicy: Never

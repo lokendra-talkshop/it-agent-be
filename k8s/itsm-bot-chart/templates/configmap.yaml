@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  namespace: {{ .Values.namespace }}
+data:
+  GOOGLE_CLIENT_ID: {{ .Values.environment.googleClientId | quote }}
+  REDIS_URL: {{ .Values.redis.url | quote }}
+  SETTING: {{ .Values.environment.setting | quote }}
+  IS_TOKEN_ENCRYPTED: {{ .Values.environment.isTokenEncrypted | quote }}
+  ENVIRONMENT: {{ .Values.environment.env | quote }}
