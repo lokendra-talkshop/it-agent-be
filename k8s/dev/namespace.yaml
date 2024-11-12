@@ -2,3 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: itsm-bot-dev
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: "itsm-bot-backend"
+    meta.helm.sh/release-namespace: "itsm-bot-dev"
