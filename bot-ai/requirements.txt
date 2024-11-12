@@ -1,0 +1,5 @@
+boto3
+requests
+pydantic==2.7.4
+pydantic_core==2.18.4
+langchain

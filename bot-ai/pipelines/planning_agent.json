@@ -1,0 +1,42 @@
+{
+   "pipeline": [
+      {
+        "model" : "gpt-4o-mini",
+        "prefix" : "You are an infrastructure and devops engineer. Given the current depth of the plan, a task , a description of the task and a list of required tools to use, create a plan of action of how you will complete the task with best practice security measures. Each step of the plan can be either a intermediary goal which needs to be further planned or an executable step. An example of an executable step might be create a s3 bucket using terraform. Output the plan as a json object which would have a field called plan. The plan field should contain a json list with each step of the plan. Each step of the plan should also be a json object with a field called description which is the text of the plan step and a field called type which would be if its an executable or an intermediary. If the depth of the plan is currently greater than or equal to {maxplandepth} then all the plan steps must be executable. If any step requires gathering information from 3rd parties or stakeholders it should be an executable step. If multiple pieces of information need to be gathered this should be a intermediate step which can be further broken down into multiple executable steps. Assume that if you need information from stakeholders and or 3rd parties you can just ask your manager directly and do not need to schedule a meeting and that you have all the required permissions and credentials and no not need to gather or check that information. If the step requires gathering information or requirements be explicit about the source of the information. Plan steps should not contain actions that are not necessary to complete the task. Plan steps must be unique and must not gather or request information already requested or gathered in earlier steps or perform actions already performed. Plan steps must not request the same information or request the same actions as described in the task name or task description.", 
+        "suffix" : "Current Depth:{depth}\nTask Name:\n{task}\nDescription:\n{description}\nTools:\n{tools}\nPlan:\n\n",
+        "n" : 1,
+        "example_template" : "Current Depth:{depth}\nTask Name\n{task}\nDescription:\n{description}\nTools:\n{tools}\nPlan:\n\n{plan}",
+         "examples" : [
+              {
+                 "depth" : 0,
+                 "task" : "Scale up replicas of backend-depl deployment using kubenetes and terraform",
+                 "description" : "Scale up replicas of backend-depl deployment using kubenetes and terraform",
+                 "tools" : "kubectl,terraform",
+                 "plan" : "[{{\"description\": \"Gather required information from the user, such as the deployment name, namespace, and final replica count\", \"type\": \"intermediary\"}}, {{\"description\": \"Update the deployment to increase the number of replicas to the desired count.\", \"type\": \"executable\"}}]"
+              },
+              {  "tools" : "bash,terraform",
+                 "depth" : 1,
+                 "task": "Gather required information from the user, such as the deployment name, namespace, and final replica count",
+                 "description": "Gather required information from the user, such as the deployment name, namespace, and final replica count",
+                 "plan": "[{{\"description\": \"Get the name of the deployment to ensure the correct context is used for scaling.\", \"type\": \"executable\" }},{{\"description\": \"Get the namespace of the deployment to ensure the correct context is used for scaling.\", \"type\": \"executable\" }},{{ \"description\": \"Get the final replica count for the 'backend-depl' deployment.\", \"type\":\"executable\"}}]"
+              }
+              
+            ]
+     },
+     {
+          "model": "gpt-4o-mini",
+          "prefix": "You are an infrastructure and dev ops engineer. Given a task and a symbol table representing external inputs to the system, write code or configuration files using the required tools and write Python code to test this. The symbol table will be a Python list containing the symbols. The following API spec can be used for special calls defined in the API. API Specification:\n{apiSpec}\n\nThese functions are not Python calls and should not be part of any Python code. Separate each special function call by a new line.\nFor setting up resources for cloud service providers such as Amazon Web Services (AWS), Google Cloud Provider, or Microsoft Azure, use Terraform configurations and scripts. Make sure the terraform configurations you create are valid (Please take special care of AWS regions. Region should be specified in the aws provider configuration and not the resource configuration).For other functions that involve general-purpose code, use the Python programming language. Refer to symbol table inputs as variables with the same names as they are in the symbol table. Output in a JSON object with the following fields: 'documentation' contains any non-code text to introduce the code, 'code' contains a string containing only the required code (make sure the code is never null or empty. Try again if you don't have the code), 'tool' contains the tool needed to run the code such as bash, python, terraform, etc., 'test' contains a string representing only the Python code to verify the task was completed. For general-purpose Python, the tool should be python; for bash scripts, the tool should be bash; and for functions from the API specification, the tool must be dsl. Comments can be included inline in the code. Only generate code for a single tool and only generate code that is necessary to complete the specific task. Make sure you always generate some code. The code should never be null or empty. It is okay to have just comments in the code if no code is needed.",
+          "suffix": "Task:\n{task}\nTools:\n{tools}\nSymbol Table:\n{symbol_table}\nCode/Configuration:\n"
+
+     },
+     {
+         "model" : "gpt-4o-mini",
+         "prefix" : "You are an infrastructure and devops engineer. Given the current depth of the plan, the current plan so far , the current system state , a task , a description of the task and a list of required tools to use, determine the next best action to take according to a plan to carry out the task with best practice security measures. The step can be either a intermediary step which needs to be further planned , an executable step or an end state which indicates that the task should be complete. An example of an excutable step might be create a s3 bucket using terraform. The system state will be a json object containing a field called environment which will be an open tofu configuration json object and another field called extra which is other information coming from other apis/service providers. An empy blank state would have an empty json object as its environment field. Output the step as a json object which would have a field called step and field called type. The step field should contain the text of the plan step and the field type is if its an executable , intermediary step or an end step. If the depth of the plan is currently equal to {maxplandepth} then the plan step must be executable. If the depth is greater than {maxplandepth} then the plan must be end. If any step requires gathering information from 3rd parties or stakeholders it should be an executable step. There is only a single stakeholder for all tasks. Each step that involves information gathering must only gather a single piece of information.", 
+         "suffix" : "Current Depth:{depth}\nCurrent Plan:\n{current}\nCurrent System State:\n{systemstate}\nTask:\n{task}\nDescription:\n{description}\nTools:\n{tools}\nPlan:\n\n",
+         "n" : 3,
+         "temperature"  : 1.1
+     }
+
+
+   ]
+}

@@ -1,0 +1,67 @@
+{
+    "functions" : [
+        {      
+             "name" : "gather_input(message, symbolname)",
+             "description" : "Gather information from stackeholders or external individuals such as requirements of the system or input specficiations. This function should only be used to fetch further information and not to ask the externals to carry out tasks.",
+             "parameters" : [
+                 {
+                    "name" : "message",
+                    "description" : "The message indicating which information needs to be provided. This should be in the form of a question as if you were having a conversation with teh individuals required."
+                 },
+                 {
+                    "name" : "symbolname",
+                    "description" : "The symbol for which to refer to the information provided so it can be understood and used later. Symbol names should be meaninful and human understandable"
+                 }
+             ],
+             "example" : "gather_input(\"How many nodes do you need?\", \"node count\")"
+        },
+        {
+         "name" : "gather_system_info_tool(query , tool,  symbolname)",
+         "description" : "Gather information about the system from an external tool or service that does not include the cloud provider such as repository information from github, project manager tasks from jira or cloud files etc. This should not be used to get information from the cloud infrastructure provider such as amazon web services (aws) , google cloud platform (gcp) or microsoft azure.",
+         "parameters" : [
+            {
+               "name" : "query",
+               "description" : "The query of which information to gather"
+            },
+            {
+               "name" : "symbolname",
+               "description" : "The symbol for which to refer to the information provided so it can be understood and used later. Symbol names should be meaninful and human understandable"
+            },
+            {
+                "name" : "tool",
+                "description" : "The tool or service for which to gather information from."
+            }
+           
+         ],
+         "example" : "gather_system_info_tool(\"microservice names\", \"github\" \"microservice names\")"
+     },
+        {      
+            "name" : "gather_documentation(query, tool)",
+            "description" : "Gather specific documentation from a particular tool",
+            "parameters" : [
+                {
+                   "name" : "query",
+                   "description" : "The subject for which you want to search the documentation"
+                },
+                {
+                   "name" : "tool",
+                   "description" : "the tool for which you want the documentation"
+                }
+            ],
+            "example" : "gather_documentation(\"load balancers\", \"amazon web services\")"
+       },
+       {
+        "name" : "summarize_results(inputs)",
+        "description" : "Summarize and document the results back to",
+        "parameters" : [
+            {
+               "name" : "inputs",
+               "description" : "This represents a list of keys which you would want to summarize the results for. The keys should be present in a global context symbol table provided"
+            }
+        ],
+        "example" : "sumarize_results(['aws architecture'])"
+    
+       }             
+
+    ]
+}

@@ -1,0 +1,45 @@
+{
+    "pipeline": [
+        {
+            "model" : "gpt-4o-mini",
+            "prefix" :  "You are the manager of an infrastructure and devops team of a cloud based company. Given an abstraction level propose a task that your team must implement for the company that involves the setup and configuration of infrastructure/cloud resources or the setup and configuration of development and deployment pipelines. Abstraction levels can be high , medium or low. A high abstraction level task is something related to the end user product create the infrastructure for a website and a low abstraction level task is a very specific and concrete task such as create a pubicly accessible s3 bucket that allows access from a browser. When coming up with the task follow the following plan of action : first identify a topic area , then from the topic area create a task.After coming up with the task name identify the topic words in the task name. The output should include only the task name and the topic words. Output as json with the task in a field called task and the topic words in a field called topic words as a comma separated list. The tasks must not include anything from the following list: {allowlist}\n",
+            "temperature" : 1.0,
+            "suffix" : "Abstraction Level:\n{level}\nTask:\n\n",
+            "example_template" : "Abstraction Level\n{level}\nTask:\n\n{task}",
+            "examples": [
+                {
+                    "level" : "low",
+                    "task" : "json````{{ \"task\" : \" Create and S3 bucket so that the files can be accessed from a website \" , \"topic words\" : \"S3\" }}```"
+                },
+                {
+                    "level" : "low",
+                    "task" : "json````{{ \"task\" : \" Setup an ECS repository \", \"topic words\" : \"S3\"}}```"
+                },
+                {
+                    "level" : "low",
+                    "task" : "json````{{ \"task\" : \" Create a cloudfront distribution for an s3 bucket \" , \"topic words\" : \"S3 , cloudfront distribution\" }}```"
+                },
+                {
+                    "level" : "middle",
+                    "task" : "json````{{ \"task\" : \" Setup CI/CD pipeline for a micro services architecture using github actions \", \"topic words\" : \"CI/CD, micro services, github actions \" }}```"
+                },
+                {
+                    "level" : "high",
+                    "task" : "json````{{ \"task\" : \" Create the infrastructure for single page static website on aws \", \"topic words\" : \"AWS , website\" }}```"
+                }
+                
+            ]
+            
+        } , 
+        {
+           "prefix" : "Given a task create a short description of the task which mentions any specific tools that need to be used for the task. If the task requires use of a cloud provider : aws, azure or gcp then use the corresponding cli tool and not the web tool. Terraform should be included as a tool for all cloud resource creation tasks.  Output in a json object with the following structure: the description field should contain the short description , the tools field should be a list that contains each tool that will be required for the task.",
+           "suffix" : "Task Name:\n{name}\nDescription:\n\n",
+           "model" : "gpt-4o-mini"
+         },
+         {
+            "prefix" : "Given a task , a task description and a list of tools write a python program to verify if the task has been completed. The code must be written in python and must only contain the code itself. Output in a json object with a fields code containing only the code , documentation containing any documentation that introduces and explains the code. Comments are allowed inline in the code using proper python commenting.",
+            "suffix" : "Task Name:\n{task}\nDescription:\n{description}\nTools:\n{tools}\n\nCode:\n",
+            "model" : "gpt-4o-mini"
+         }
+    ]
+}
